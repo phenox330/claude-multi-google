@@ -1,0 +1,11 @@
+# MCP config contains tokens
+.mcp.json
+
+# Credential files
+*.credentials.json
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
