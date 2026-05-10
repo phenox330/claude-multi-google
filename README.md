@@ -78,8 +78,8 @@ Once running, Claude Code can search your email, read Drive files, check your ca
 
 1. **Clone this repo** and open Claude Code in it:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/claude-code-google-workspace.git
-   cd claude-code-google-workspace
+   git clone https://github.com/phenox330/claude-multi-google.git
+   cd claude-multi-google
    claude
    ```
 
