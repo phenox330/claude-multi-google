@@ -70,7 +70,7 @@ Si un message est trop gros pour le contexte, fallback sur le snippet uniquement
 
 ### Étape 5 — Drafts sur 0-Action
 
-⚠️ Drafts UNIQUEMENT pour `gws-pro` et `gws-klyra`. Jamais pour `gws-perso` (risque intime).
+⚠️ Drafts UNIQUEMENT pour `gws-pro` et `gws-klyra`. Jamais pour `gws-perso` (contexte privé — pas de draft auto sur le compte personnel).
 
 Pour chaque mail nouvellement labellisé `0-Action` :
 
