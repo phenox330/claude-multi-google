@@ -9,3 +9,7 @@
 
 # Node
 node_modules/
+
+# Claude Code local state
+.claude/output/
+.claude/cache/

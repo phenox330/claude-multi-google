@@ -4,9 +4,14 @@ Give Claude Code access to Gmail, Google Drive, Calendar, Sheets, Docs, and Slac
 
 ## Background
 
-Claude Desktop and Claude Cowork have built-in Google Workspace integrations — flip a toggle and you're connected. **Claude Code has nothing.** As of March 2026, there's no official integration, no plugin that handles multi-account, and no documentation on how to set it up.
+**No Claude product supports multiple Google accounts natively.**
 
-This repo is the result of ~6 hours of research and debugging to get it working. The final solution is simple, but getting there required discovering several undocumented behaviors in Claude Code's MCP system, Google's OAuth2 implementation, and the `gws` CLI.
+- Claude.ai (web), Claude Desktop, and Claude Cowork all have built-in Google Workspace integrations — but **single-account only**. You connect one Gmail, one Drive, and that's it.
+- Claude Code has **zero** native Google Workspace integration — single-account or otherwise.
+
+If you juggle several Google accounts (personal + work + side project), you're stuck. As of March 2026, no Anthropic product solves this. There's no official plugin, no documentation, no toggle.
+
+This repo is the result of ~6 hours of research and debugging to get multi-account working end-to-end on Claude Code. The final solution is simple, but getting there required discovering several undocumented behaviors in Claude Code's MCP system, Google's OAuth2 implementation, and the `gws` CLI.
 
 ### What makes this hard
 
@@ -86,7 +91,7 @@ Once running, Claude Code can search your email, read Drive files, check your ca
 
 ### Manual Setup
 
-If you prefer step-by-step instructions: [docs/manual-setup.md](docs/manual-setup.md).
+If you prefer step-by-step instructions: [docs/manual-setup.md](docs/manual-setup.md) (English) — or [docs/setup-fr.md](docs/setup-fr.md) (French, with troubleshooting log from a real 3-account setup).
 
 ### Full Research Log
 
@@ -143,6 +148,13 @@ Or add the `mcpServers` config to `~/.claude.json` for global access in every pr
 
 **Always gitignore `.mcp.json`** — it contains OAuth tokens.
 
+## Custom Commands
+
+Personal slash commands that build on this MCP setup live in [`commands/`](commands/). See [commands/README.md](commands/README.md) for install instructions.
+
+Notably:
+- **`/tri-mail`** — daily triage of multiple Gmail accounts (archive, label, draft replies, recap email)
+
 ## Known Gotchas
 
 These are ordered by how much time they'll cost you if you hit them unaware:
@@ -184,3 +196,7 @@ Issues and PRs welcome. If you hit a new gotcha, please open an issue — every 
 ## License
 
 MIT
+
+---
+
+Built by [Anthony](https://agmbt.com) at [Klyra Studio](https://klyra.io) — we help teams ship faster with design, no-code, and AI automation. If this saved you hours, that's exactly what Klyra does for clients every day. [Get in touch →](mailto:hello@agmbt.com)
