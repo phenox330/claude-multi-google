@@ -35,9 +35,25 @@ Si zéro mail : skip ce compte, passe au suivant.
 
 ### Étape 3 — Récupérer headers en parallèle
 
-Pour chaque message, `gmail_users_messages_get` avec `format: "metadata"` et `metadataHeaders: ["From", "Subject", "List-Unsubscribe", "Date"]`. Lance toutes les lectures en parallèle.
+Pour chaque message, `gmail_users_messages_get` avec :
 
-Si un message est trop gros pour le contexte, fallback sur le snippet uniquement.
+```
+params: {
+  "userId": "me",
+  "id": "<msgId>",
+  "format": "metadata",
+  "metadataHeaders": ["From", "Subject", "List-Unsubscribe", "Date", "Message-ID"],
+  "fields": "id,threadId,snippet,labelIds,payload/headers"
+}
+```
+
+Lance toutes les lectures en parallèle.
+
+⚠️ Le param `fields` est **obligatoire** — il force l'API Google à ne renvoyer que les headers + snippet (jamais le body). Sans ça, certains wrappers MCP n'honorent pas `metadataHeaders` et tu te retrouves avec un payload vide → tentation d'escalader en `format=full` → réponse trop grosse pour le contexte (typiquement les newsletters HTML font 30-100k chars).
+
+**Règle dure : NE JAMAIS escalader en `format=full` à cette étape.** Si les headers reviennent vides malgré `fields`, tu classifies sur `snippet` + `labelIds` (CATEGORY_PROMOTIONS, CATEGORY_UPDATES sont déjà des signaux forts) et tu archives si la confiance est haute, sinon tu laisses en INBOX et tu le notes dans le récap.
+
+Si une réponse est quand même trop grosse (erreur `exceeds maximum allowed tokens`), n'utilise PAS le fichier sauvegardé en fallback : passe au mail suivant, laisse celui-ci en INBOX, note-le comme "skipped (réponse API trop grosse)" dans le récap.
 
 ### Étape 4 — Classification
 
@@ -74,7 +90,19 @@ Si un message est trop gros pour le contexte, fallback sur le snippet uniquement
 
 Pour chaque mail nouvellement labellisé `0-Action` :
 
-1. Récupère le contenu complet du mail (`format: "full"`) si pas déjà fait
+1. Récupère le contenu du mail avec `format: "full"` **mais en filtrant les attachments via `fields`** pour éviter les réponses trop grosses :
+
+```
+params: {
+  "userId": "me",
+  "id": "<msgId>",
+  "format": "full",
+  "fields": "id,threadId,payload/headers,payload/body,payload/parts(mimeType,body/data,parts(mimeType,body/data))"
+}
+```
+
+Si la réponse dépasse quand même la limite (cas rare des mails très longs sans attachments), skip le draft et note dans le récap : "draft non créé — mail trop volumineux".
+
 2. Rédige une réponse en français :
    - **gws-pro** (hello@agmbt.com) : ton pro chaleureux, direct, signature `Anthony`
    - **gws-klyra** (anthony@klyra.io) : voix Klyra Studio, expertise design+nocode, ton concis et confiant, signature `Anthony / Klyra Studio`
