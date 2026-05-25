@@ -41,19 +41,22 @@ Pour chaque message, `gmail_users_messages_get` avec :
 params: {
   "userId": "me",
   "id": "<msgId>",
-  "format": "metadata",
-  "metadataHeaders": ["From", "Subject", "List-Unsubscribe", "Date", "Message-ID"],
+  "format": "full",
   "fields": "id,threadId,snippet,labelIds,payload/headers"
 }
 ```
 
 Lance toutes les lectures en parallèle.
 
-⚠️ Le param `fields` est **obligatoire** — il force l'API Google à ne renvoyer que les headers + snippet (jamais le body). Sans ça, certains wrappers MCP n'honorent pas `metadataHeaders` et tu te retrouves avec un payload vide → tentation d'escalader en `format=full` → réponse trop grosse pour le contexte (typiquement les newsletters HTML font 30-100k chars).
+⚠️ **Important — pourquoi `format: "full"` et pas `metadata`** : le wrapper MCP des serveurs `gws-*` a un bug — en `format: "metadata"`, il **ne propage pas `payload.headers`** dans la réponse, même quand `metadataHeaders` et `fields: "...,payload/headers"` sont explicitement fournis. Résultat : tu te retrouves à classifier sur `snippet` + `labelIds` seuls, sans From/Subject. Vérifié par test direct sur `mcp__gws-klyra__gmail_users_messages_get` le 2026-05-12.
 
-**Règle dure : NE JAMAIS escalader en `format=full` à cette étape.** Si les headers reviennent vides malgré `fields`, tu classifies sur `snippet` + `labelIds` (CATEGORY_PROMOTIONS, CATEGORY_UPDATES sont déjà des signaux forts) et tu archives si la confiance est haute, sinon tu laisses en INBOX et tu le notes dans le récap.
+La parade : `format: "full"` **combiné avec `fields: "id,threadId,snippet,labelIds,payload/headers"`**. Le `fields` filtre côté Google API → la réponse contient les headers complets mais **exclut `payload.body` et `payload.parts`**, donc pas de HTML 30-100k. Taille typique : 5-10k par mail (headers DKIM/SPF inclus). Reste léger pour le contexte.
 
-Si une réponse est quand même trop grosse (erreur `exceeds maximum allowed tokens`), n'utilise PAS le fichier sauvegardé en fallback : passe au mail suivant, laisse celui-ci en INBOX, note-le comme "skipped (réponse API trop grosse)" dans le récap.
+**Ne JAMAIS appeler `format: "full"` sans `fields`** — c'est ce mode-là qui renvoie le body HTML complet et explose le contexte.
+
+Si une réponse dépasse quand même la limite (cas rare : mail avec 50+ headers de routing), passe au mail suivant, laisse-le en INBOX, note-le comme "skipped (réponse API trop grosse)" dans le récap. **N'utilise pas de fichier sauvegardé en fallback.**
+
+Si malgré `format: "full"` + `fields`, `payload.headers` revient vide ou absent (cas pathologique), classifie sur `snippet` + `labelIds` (CATEGORY_PROMOTIONS, CATEGORY_UPDATES sont des signaux forts) : archive si confiance haute, sinon laisse en INBOX + note dans le récap.
 
 ### Étape 4 — Classification
 
