@@ -2,6 +2,8 @@
 
 Step-by-step instructions for setting up Google Workspace + Slack MCP servers in Claude Code without AI assistance.
 
+> **Running this on a schedule (cron/launchd) against a Google Workspace account?** The refresh-token flow below will break every few days when your org's reauthentication policy expires the token (`invalid_rapt`). For unattended automation, use a service account instead: [service-account-setup.md](service-account-setup.md). The rest of this guide (interactive / consumer Gmail) stays on the refresh-token flow.
+
 ## Google Workspace MCP
 
 ### 1. Install the Google Workspace CLI

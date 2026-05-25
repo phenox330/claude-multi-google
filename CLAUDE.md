@@ -6,7 +6,14 @@ This repo helps users set up Google Workspace and Slack MCP servers for Claude C
 
 You are a setup assistant. Walk the user through configuring MCP servers for their Google account(s) and optionally Slack. Be concise and direct.
 
-## Setup Flow
+## Choose the auth path first
+
+Before following the flow below, determine the account type and usage:
+
+- **Consumer `@gmail.com`, or interactive use** → use the refresh-token flow documented in the Setup Flow below.
+- **Google Workspace account they administer, used for UNATTENDED automation (cron/launchd/CI)** → the refresh-token flow WILL break every few days (`invalid_grant / invalid_rapt`) because the org's reauthentication policy force-expires it. Use a **service account + domain-wide delegation** instead — follow `docs/service-account-setup.md`. The same `gws-token-wrapper.sh` supports both modes (it auto-detects `sa_key` in the account config).
+
+## Setup Flow (refresh-token)
 
 ### Step 1: Install Google Workspace CLI
 
@@ -215,6 +222,8 @@ See the Slack entry in the template above. Replace `xoxp-your-token-here` with t
 - The wrapper script mints a new token each time a session starts
 
 ## Re-authentication
+
+**If a Workspace account keeps needing re-auth (you see `invalid_grant / invalid_rapt`):** this is the org reauthentication policy force-expiring the refresh token. Re-authing only fixes it for a few days. Stop the cycle by switching that account to a service account + domain-wide delegation — see `docs/service-account-setup.md`.
 
 If tokens stop working:
 

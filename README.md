@@ -38,8 +38,10 @@ Each of these individually cost 30-120 minutes to diagnose. Together they make t
 | `CREDENTIALS_FILE` env var per MCP server | Doesn't reliably route to the right account |
 | `mcpServers` in `settings.local.json` | Silently ignored — Claude Code never reads MCP config from there |
 | `mcpServers` in `.claude/settings.json` | Also silently ignored |
-| Service account auth | Can't access personal Gmail/Drive without domain-wide delegation |
+| Service account auth (for a **personal** `@gmail.com`) | Domain-wide delegation is Workspace-only — it can't impersonate a consumer Gmail account |
 | Requesting all 85+ OAuth scopes | Google blocks unverified apps requesting too many scopes |
+
+> **Note:** For a **Google Workspace** account you administer — especially under **unattended automation** (cron/launchd) — a service account *is* the right answer. The refresh-token flow gets force-expired by org reauthentication policies (`invalid_rapt`); a service account never does. See [docs/service-account-setup.md](docs/service-account-setup.md).
 
 For the full investigation log, see [docs/research-notes.md](docs/research-notes.md).
 
@@ -92,6 +94,10 @@ Once running, Claude Code can search your email, read Drive files, check your ca
 ### Manual Setup
 
 If you prefer step-by-step instructions: [docs/manual-setup.md](docs/manual-setup.md) (English) — or [docs/setup-fr.md](docs/setup-fr.md) (French, with troubleshooting log from a real 3-account setup).
+
+### Unattended Automation (scheduled jobs)
+
+Running this on a schedule (cron/launchd) against a **Google Workspace** account? The standard refresh-token flow will break every few days when your org's reauthentication policy expires it. Use a **service account + domain-wide delegation** instead — it never breaks: [docs/service-account-setup.md](docs/service-account-setup.md).
 
 ### Full Research Log
 
@@ -170,6 +176,7 @@ These are ordered by how much time they'll cost you if you hit them unaware:
 | 7 | Access tokens expire after ~1 hour | 5 min | API calls fail on long sessions | Restart Claude Code for fresh tokens |
 | 8 | `gws auth login` opens foreground browser | 5 min | Wrong Chrome profile = wrong account authenticated | Bring correct Chrome profile to front before running |
 | 9 | Too many OAuth scopes requested | 10 min | Google blocks unverified app | Use `-s drive,gmail,calendar,sheets,docs` (not all scopes) |
+| 10 | **Workspace** refresh token dies every few days | hours, recurring | Write calls fail with `invalid_grant / invalid_rapt`; re-auth fixes it temporarily then breaks again | The org enforces a reauthentication policy — refresh tokens can't survive it. For automation, switch to a **service account + domain-wide delegation**: [docs/service-account-setup.md](docs/service-account-setup.md) |
 
 ## Caveats
 
